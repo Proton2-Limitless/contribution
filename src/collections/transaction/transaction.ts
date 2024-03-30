@@ -1,22 +1,15 @@
 import { CollectionConfig } from "payload/types";
 import { anyone } from "../user/access/anyone";
 import { walletBeforeCreate } from "../wallet/hooks/walletbeforecreate";
+import { ReadTransaction } from "./access/read_transaction";
 
 export const Transactions: CollectionConfig = {
   slug: "transactions",
   access: {
-    read: ({ req }) => {
-      if (req.user.roles.includes("admin")) {
-        return true;
-      }
-      return { userId: req.user.id };
-    },
+    read: ReadTransaction,
     create: anyone,
     update: () => false,
     delete: () => false,
-  },
-  hooks: {
-    beforeChange: [walletBeforeCreate],
   },
   fields: [
     {
@@ -47,7 +40,7 @@ export const Transactions: CollectionConfig = {
       relationTo: "users",
       label: "User",
       access: {
-        create: () => false
+        create: () => false,
       },
     },
     {
@@ -56,7 +49,7 @@ export const Transactions: CollectionConfig = {
       label: "Created At",
       defaultValue: () => new Date(),
       access: {
-        create: () => false
+        create: () => false,
       },
     },
   ],

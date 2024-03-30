@@ -54,6 +54,7 @@ export const Users: CollectionConfig = {
           value: 'user',
         },
       ],
+      defaultValue: "user"
     },
   ],
 }

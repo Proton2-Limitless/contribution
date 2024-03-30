@@ -1,99 +1,72 @@
 import { CollectionConfig } from "payload/types";
-import { CanContribute } from "./hooks/contributionsUser";
-import { startDate } from "./hooks/start_date";
-import { PerformContrOpHook } from "../perform-bank-op/hooks/perform_contr_op_hook";
+import { savingNewContribution } from "./hooks/before_saving_new_contribution";
+import { CanUserContribute } from "./hooks/can_user_contribute";
 
 export const Contributions: CollectionConfig = {
   slug: "contributions",
   access: {
+    create: CanUserContribute,
+    update: () => false, //if everybody has paid
   },
   hooks: {
-    beforeChange: [CanContribute,PerformContrOpHook],
+    beforeChange: [savingNewContribution],
   },
   fields: [
     {
-      name: "operation",
-      type: 'select',
-      options: [
-        {label: "new",value: "new"},
-        {label: "exist",value: "exist"},
-      ]
-    },
-    {
-      name: "contributionId",
-      type: 'text',
+      name: "members",
+      type: "relationship",
+      relationTo: "users",
+      hasMany: true,
       access: {
-        create: () => false
-      }
-    },
-    {
-      name: "users",
-      type: "array",
-      fields: [
-        {
-          name: "userId",
-          type: "relationship",
-          relationTo: "users",
-          hasMany: false,
-          access: {
-            create: () => false,
-          },
-        },
-      ],
-    },
-    {
-      name: "amount",
-      type: "number",
-      required: true,
-    },
-    {
-      name: "amountToContribute",
-      type: "number",
-      access: {
+        create: () => false,
         update: () => false,
       },
-      required: true,
     },
     {
-      name: "frequency",
+      name: "intervals",
       type: "select",
       options: [
         { label: "week", value: "week" },
-        { label: "day", value: "day" },
         { label: "month", value: "month" },
-        { label: "year", value: "year" },
       ],
-      required: true,
       access: {
-        update: () => false
-      }
+        update: () => false,
+      },
     },
     {
-      name: "totalAmount",
+      name: "payDate",
+      type: "date",
+      access: {
+        create: () => false,
+        update: () => false,
+      },
+    },
+    {
+      name: "totalSaving",
       type: "number",
+      access: {
+        create: () => false,
+        update: () => false,
+      },
     },
     {
-      name: "paidUsers",
-      type: "array",
-      fields: [
-        {
-          name: "userId",
-          type: "relationship",
-          relationTo: "users",
-          hasMany: false,
-          access: {
-            create: () => false,
-          },
-        },
-      ],
-    },
-    {
-      name: "reachedUser",
+      name: "rotationOrder",
       type: "relationship",
       relationTo: "users",
       hasMany: false,
       access: {
         create: () => false,
+        update: () => false,
+      },
+    },
+    {
+      name: "payoutHistory",
+      type: "relationship",
+      relationTo: "users",
+      hasMany: true,
+      access: {
+        create: () => false,
+        update: () => false,
       },
     },
     {
@@ -103,30 +76,16 @@ export const Contributions: CollectionConfig = {
         { label: "open", value: "open" },
         { label: "close", value: "close" },
       ],
-    },
-    {
-      name: "createdAt",
-      type: "date",
-      defaultValue: () => new Date(),
-    },
-    {
-      name: "startDate",
-      type: "date",
-      defaultValue: () => new Date(),
-      hooks: {
-        beforeChange: [startDate],
+      defaultValue: "open",
+      access: {
+        create: () => false,
+        update: () => false,
       },
     },
     {
-      name: "paybackDate",
-      type: "date",
-      defaultValue: () => new Date(),
-    },
-    {
-      name: "totalUsers",
+      name: "amountToContribute",
       type: "number",
       access: {
-        create: () => true,
         update: () => false,
       },
     },

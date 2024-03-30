@@ -1,12 +1,12 @@
-import type { BeforeChangeHook } from 'payload/dist/collections/config/types'
+import { FieldHook } from 'payload/types'
 
-export const walletBeforeCreate: BeforeChangeHook = async ({
+export const walletBeforeCreate: FieldHook = async ({
   req,
   operation,
-  data
+  value
 }) => {
   if (operation === 'create') {
-    data.userId = req.user?.id
+    value = req.user?.id
   }
-  return data
+  return value
 }

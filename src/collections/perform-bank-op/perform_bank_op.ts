@@ -1,34 +1,64 @@
 import { CollectionConfig } from "payload/types";
+import { BankOpHook } from "./hooks/bank_op_hook";
+import { UpdateWallet } from "../wallet/access/update_wallet";
+import { ReadWallet } from "../wallet/access/read_wallet";
 import { admins } from "../user/access/admins";
+import { checkRole } from "../user/access/checkRole";
 
 export const PerformBankOp: CollectionConfig = {
   slug: "perform_bank_op",
   access: {
-    create: async ({ req: { payload, user }, data }) => {
-      if (data.type === "debit") {
-        const availableBalance = (
-          await payload.findByID({ collection: "wallets", id: data?.wallet })
-        ).availableBalance;
-
-        if (availableBalance - data?.amount < 0) {
-          return false;
-        }
-        return true;
-      }
-
-      return true;
-    },
+    // read: ReadWallet,
+    create: UpdateWallet,
     update: () => false,
     delete: () => false,
-    read: admins,
   },
   fields: [
     {
+      name: "contributionId",
+      type: "text",
+      access: {
+        create: ({ req: { user } }) => checkRole(["admin"], user),
+        update: () => false,
+      },
+      hooks: {
+        afterChange: [
+          async ({ req, value }) => {
+            if (value) {
+              const contribution = await req.payload.findByID({
+                collection: "contributions",
+                id: value,
+              });
+              const members = contribution.members.filter(
+                (contr) => contr !== contribution.rotationOrder
+              );
+              const rotationOrder = members[0];
+              const payoutHistory = [
+                ...contribution.payoutHistory,
+                contribution.rotationOrder,
+              ];
+
+              await req.payload.update({
+                collection: "contributions",
+                id: value,
+                data: {
+                  status: "close",
+                  members: members,
+                  rotationOrder,
+                  payoutHistory,
+                },
+              });
+            }
+          },
+        ],
+      },
+    },
+    {
       name: "wallet",
-      type: "relationship",
-      relationTo: "wallets",
-      hasMany: false,
-      required: true,
+      type: "text",
+      // relationTo: "wallets",
+      // hasMany: false,
+      // required: true,
     },
     {
       name: "type",
@@ -54,32 +84,6 @@ export const PerformBankOp: CollectionConfig = {
     },
   ],
   hooks: {
-    beforeChange: [
-      async ({ operation, req: { payload, user }, data }) => {
-        if (operation === "create") {
-          const id = data?.wallet;
-          const wallet = await payload.findByID({ collection: "wallets", id });
-          let newAvailableBalance = wallet.availableBalance + data?.amount;
-          if (data.type === "debit") {
-            newAvailableBalance = wallet.availableBalance - data?.amount;
-          }
-          await payload.update({
-            collection: "wallets",
-            id,
-            data: { availableBalance: newAvailableBalance, ...data },
-          });
-
-          await payload.create({
-            collection: "transactions",
-            data: {
-              type: data?.type,
-              reason: data?.reason,
-              amount: data?.amount,
-              userId: user?.id,
-            },
-          });
-        }
-      },
-    ],
+    beforeChange: [BankOpHook],
   },
 };

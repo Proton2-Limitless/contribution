@@ -9,9 +9,17 @@ import { Wallets } from "./collections/wallet/wallet";
 import { Transactions } from "./collections/transaction/transaction";
 import { PerformBankOp } from "./collections/perform-bank-op/perform_bank_op";
 import { Contributions } from "./collections/contribution/contribution";
+import { joinContribution } from "./collections/contribution/join_conribution";
 
 export default buildConfig({
-  collections: [Users, Wallets, Transactions, PerformBankOp, Contributions],
+  collections: [
+    Users,
+    Wallets,
+    Transactions,
+    PerformBankOp,
+    Contributions,
+    joinContribution,
+  ],
   admin: {
     bundler: webpackBundler(),
   },

@@ -32,31 +32,38 @@ export interface User {
   password?: string
 }
 export interface Wallet{
-  userId: User,
+  id: string,
+  userId: string,
   name: string,
   availableBalance: number,
   updatedAt: string
   createdAt: string
 }
 export interface Transactions{
+  id: string,
   type: string,
   reason: string,
   amount: number,
-  userId: User,
+  userId: string,
   createdAt: Date
+}
+export interface performBankOp{
+  id: string,
+  wallet: string,
+  type: string,
+  reason: string,
+  amount: number
 }
 export interface Contributions{
   id: string,
-  users: User[],
+  members: string[],
   amountToContribute: number,
-  totalAmount: number,
-  totalUsers: number,
-  paidUsers: User[],
-  createdAt: Date,
+  totalSaving: number,
+  payoutHistory: string[],
+  payDate: Date,
   status: string,
-  frequency: string,
-  paybackDate: Date,
-  reachedUser: User
+  intervals: string,
+  rotationOrder: string
 }
 
 
@@ -67,7 +74,8 @@ declare module 'payload' {
       users: User,
       wallets: Wallet,
       transactions: Transactions,
-      contributions: Contributions
+      contributions: Contributions,
+      perform_bank_op:performBankOp
     }
   }
 }
