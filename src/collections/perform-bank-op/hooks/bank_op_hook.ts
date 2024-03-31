@@ -6,7 +6,7 @@ export const BankOpHook: BeforeChangeHook = async ({
   data,
 }) => {
   if (operation === "create") {
-    const id = data.wallet;
+    let id = data.wallet;
     let newAvailableBalance = 0;
     if (id) {
       let wallet = await payload.findByID({ collection: "wallets", id });
@@ -17,24 +17,29 @@ export const BankOpHook: BeforeChangeHook = async ({
       }
     }
 
-    // if (data.contributionId) {
-    //   const contribution = await payload.findByID({
-    //     collection: "contributions",
-    //     id: data.contributionId,
-    //   });
+    if (data.contributionId) {
+      const contribution = await payload.findByID({
+        collection: "contributions",
+        id: data.contributionId,
+      });
 
-    //   const contriWallet = await payload.find({
-    //     collection: "wallets",
-    //     where: { userId: { equals: contribution.rotationOrder } },
-    //   });
+      const rotOrder =
+        typeof contribution.rotationOrder === "string"
+          ? contribution.rotationOrder
+          : contribution.rotationOrder["id"];
 
-    //   const wallet = contriWallet.docs[0];
-    //   console.log(contribution.rotationOrder);
-    //   console.log(contriWallet);
-      
-    //   newAvailableBalance =
-    //     wallet.availableBalance + contribution?.amountToContribute;
-    // }
+      const contriWallet = await payload.find({
+        collection: "wallets",
+        where: { userId: { equals: rotOrder } },
+      });
+
+      const wallet = contriWallet.docs[0];
+
+      id = wallet?.id
+
+      newAvailableBalance =
+        wallet?.availableBalance + contribution?.amountToContribute;
+    }
 
     await payload.update({
       collection: "wallets",
@@ -50,6 +55,6 @@ export const BankOpHook: BeforeChangeHook = async ({
         amount: data?.amount,
         userId: user?.id,
       },
-    });
+    });    
   }
 };

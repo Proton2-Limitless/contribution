@@ -2,7 +2,6 @@ import { Access } from "payload/config";
 
 export const canJoinContribution: Access = async ({ req, data }) => {
   if (data.contributionId) {
-    console.log(data.contributionId);
     const contribution = await req.payload.findByID({
       collection: "contributions",
       id: data.contributionId,
@@ -25,6 +24,5 @@ export const canJoinContribution: Access = async ({ req, data }) => {
     )
       return false;
   }
-  //   66080d740a35042fa9a59d93
   return true;
 };

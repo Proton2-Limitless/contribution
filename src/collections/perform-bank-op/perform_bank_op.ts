@@ -4,6 +4,7 @@ import { UpdateWallet } from "../wallet/access/update_wallet";
 import { ReadWallet } from "../wallet/access/read_wallet";
 import { admins } from "../user/access/admins";
 import { checkRole } from "../user/access/checkRole";
+import { payContributedUser } from "./hooks/paycontributed_user";
 
 export const PerformBankOp: CollectionConfig = {
   slug: "perform_bank_op",
@@ -23,33 +24,7 @@ export const PerformBankOp: CollectionConfig = {
       },
       hooks: {
         afterChange: [
-          async ({ req, value }) => {
-            if (value) {
-              const contribution = await req.payload.findByID({
-                collection: "contributions",
-                id: value,
-              });
-              const members = contribution.members.filter(
-                (contr) => contr !== contribution.rotationOrder
-              );
-              const rotationOrder = members[0];
-              const payoutHistory = [
-                ...contribution.payoutHistory,
-                contribution.rotationOrder,
-              ];
-
-              await req.payload.update({
-                collection: "contributions",
-                id: value,
-                data: {
-                  status: "close",
-                  members: members,
-                  rotationOrder,
-                  payoutHistory,
-                },
-              });
-            }
-          },
+          payContributedUser
         ],
       },
     },
